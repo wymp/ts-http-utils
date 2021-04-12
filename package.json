@@ -29,7 +29,7 @@
   "homepage": "https://github.com/wymp/ts-http-utils#readme",
   "dependencies": {
     "@wymp/ts-simple-interfaces": "^0.5.1",
-    "@wymp/types": "^0.1.0"
+    "@wymp/types": "^0.1.0-rc"
   },
   "devDependencies": {
     "@types/jest": "^26.0.22",
