@@ -1,6 +1,6 @@
 {
   "name": "@wymp/http-utils",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "A small typescript package providing various utilities for HTTP environments",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -28,7 +28,8 @@
   },
   "homepage": "https://github.com/wymp/ts-http-utils#readme",
   "dependencies": {
-    "@wymp/ts-simple-interfaces": "^0.5.1"
+    "@wymp/ts-simple-interfaces": "^0.5.1",
+    "@wymp/types": "^0.1.0"
   },
   "devDependencies": {
     "@types/jest": "^26.0.22",
