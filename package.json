@@ -1,6 +1,6 @@
 {
   "name": "@wymp/http-utils",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A small typescript package providing various utilities for HTTP environments",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
