@@ -1,6 +1,6 @@
 {
   "name": "@wymp/http-utils",
-  "version": "1.1.1",
+  "version": "1.2.1",
   "description": "A small typescript package providing various utilities for HTTP environments",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -9,7 +9,8 @@
   },
   "scripts": {
     "test": "jest",
-    "prepublishOnly": "rm -Rf dist; npx tsc"
+    "prepublishOnly": "rm -Rf dist; npx tsc",
+    "postinstall": "husky install"
   },
   "repository": {
     "type": "git",
@@ -28,6 +29,7 @@
   },
   "homepage": "https://github.com/wymp/ts-http-utils#readme",
   "dependencies": {
+    "@openfinanceio/http-errors": "^1.7.0",
     "@wymp/ts-simple-interfaces": "^0.5.1",
     "@wymp/types": "^0.1.0-rc"
   },
@@ -44,11 +46,6 @@
   "prettier": {
     "printWidth": 100,
     "trailingComma": "es5"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "pretty-quick --staged"
-    }
   },
   "jest": {
     "verbose": true,
