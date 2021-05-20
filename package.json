@@ -1,6 +1,6 @@
 {
   "name": "@wymp/http-utils",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "A small typescript package providing various utilities for HTTP environments",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -9,8 +9,7 @@
   },
   "scripts": {
     "test": "jest",
-    "prepublishOnly": "rm -Rf dist; npx tsc",
-    "postinstall": "husky install"
+    "prepublishOnly": "rm -Rf dist; npx tsc"
   },
   "repository": {
     "type": "git",
