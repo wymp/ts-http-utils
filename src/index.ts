@@ -1,4 +1,4 @@
-import * as E from "@openfinanceio/http-errors";
+import * as E from "@wymp/http-errors";
 import { SimpleLoggerInterface, TaggedLogger } from "@wymp/ts-simple-interfaces";
 import { Auth } from "@wymp/types";
 
