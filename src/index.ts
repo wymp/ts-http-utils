@@ -1,6 +1,6 @@
 import * as E from "@wymp/http-errors";
 import { SimpleLoggerInterface, TaggedLogger } from "@wymp/ts-simple-interfaces";
-import { Auth } from "@wymp/types";
+import { Auth, Api } from "@wymp/types";
 
 export const logger = (
   log: SimpleLoggerInterface,
@@ -285,3 +285,45 @@ export function authorize<T>(
   });
   throw e;
 }
+
+export const getCollectionParams = (
+  query: any,
+  defaults?: Partial<Api.CollectionParams>
+): Api.CollectionParams => {
+  const params: Api.CollectionParams = {};
+
+  // First fill in defaults, if given
+  if (defaults) {
+    if (defaults.__pg && Object.keys(defaults.__pg).length > 0) {
+      params.__pg = {};
+      if (defaults.__pg.size) {
+        params.__pg.size = defaults.__pg.size;
+      }
+      if (defaults.__pg.cursor) {
+        params.__pg.cursor = defaults.__pg.cursor;
+      }
+    }
+    if (defaults.__sort) {
+      params.__sort = defaults.__sort;
+    }
+  }
+
+  // Then fill in actual params, if given
+  if (query) {
+    if (query.pg && Object.keys(query.pg).length > 0) {
+      params.__pg = {};
+      if (query.pg.size) {
+        params.__pg.size = query.pg.size;
+      }
+      if (query.pg.cursor) {
+        params.__pg.cursor = query.pg.cursor;
+      }
+    }
+    if (query.sort) {
+      params.__sort = query.sort;
+    }
+  }
+
+  // Then return
+  return params;
+};
