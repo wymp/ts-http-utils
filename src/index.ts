@@ -2,6 +2,8 @@ import * as E from "@wymp/http-errors";
 import { SimpleLoggerInterface, TaggedLogger } from "@wymp/ts-simple-interfaces";
 import { Auth, Api } from "@wymp/types";
 
+export * from "./Translator";
+
 export const logger = (
   log: SimpleLoggerInterface,
   req: {
@@ -122,8 +124,9 @@ export const isStringAuthdReq = <T>(req: T, o?: Array<Obstruction>): req is T & 
 }
 
 /**
- * Use this function to easily authorize requests. It ensures that requests contain auth info and
- * additionally fulfill one of the given authorization requirements.
+ * Use the `authorize` function (defined below) to easily authorize requests according to the given
+ * auth spec. It ensures that requests contain auth info and additionally fulfill one of the given
+ * authorization requirements in authSpecs.
  *
  * NOTE: It is sufficient that all of the specified clauses in just ONE of the tuples pass
  * authorization.
@@ -286,6 +289,12 @@ export function authorize<T>(
   throw e;
 }
 
+/**
+ * Take a query object (usually from `req.query`, but technically can be anything) along with
+ * optional defaults and return an object of type Api.CollectionParams. This allows you to easily
+ * extract collection parameters (pagination and sorting) from a request to pass into the data
+ * system.
+ */
 export const getCollectionParams = (
   query: any,
   defaults?: Partial<Api.CollectionParams>
