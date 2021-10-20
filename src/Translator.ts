@@ -105,7 +105,7 @@ export interface DbResourceSpec {
   [dbFieldName: string]: "attr" | [ApiFieldName, DefaultType];
 }
 
-declare interface Transform<DT, AT> {
+export interface TransformFunction<DT, AT> {
   <K extends keyof DT>(from: "db", fieldName: K, val: DT[K]): unknown | void;
   <K extends keyof AT>(from: "api", fieldName: K, val: AT[K]): unknown | void;
 }
@@ -129,7 +129,7 @@ export class Translator<
      * API presents them in native boolean format. Or the database might return full dates while the
      * api presents unix timestamps. This function allows you to handle such translations.
      */
-    protected transform?: Transform<DT, AT>
+    protected transform?: TransformFunction<DT, AT>
   ) {
     this.apiSpec = spec;
     this.dbSpec = {};

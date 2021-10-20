@@ -1,8 +1,9 @@
 import * as E from "@wymp/http-errors";
 import { SimpleLoggerInterface, TaggedLogger } from "@wymp/ts-simple-interfaces";
 import { Auth, Api } from "@wymp/types";
+import * as Translator from "./Translator";
 
-export * from "./Translator";
+export { Translator };
 
 export const logger = (
   log: SimpleLoggerInterface,
