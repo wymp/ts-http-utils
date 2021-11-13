@@ -1,13 +1,35 @@
 import { SimpleLogLevels, SimpleLoggerInterface } from "@wymp/ts-simple-interfaces";
 
 /**
- * Translators perform the work of translating data between database format and api format[1]. They
+ * ResourceSpecs describe the attributes and relationships that a resource has and the way they map
+ * between database representations and api representations.
+ */
+declare type DbFieldName = string;
+declare type ApiFieldName = string;
+declare type DefaultType = string;
+export interface ApiResourceSpec {
+  [apiFieldName: string]: "attr" | [DbFieldName | null, DefaultType];
+}
+export interface DbResourceSpec {
+  [dbFieldName: string]: "attr" | [ApiFieldName, DefaultType];
+}
+
+export interface TransformFunction<DT, AT> {
+  <K = string | null>(from: "db", fieldName: K, val: unknown): K extends string ? unknown : AT;
+  <K = string | null>(from: "api", fieldName: K, val: unknown): K extends string ? unknown : DT;
+}
+
+declare type Nullable<T> = { [K in keyof T]: T[K] | null };
+
+/**
+ * Translators perform the work of translating data between database format and api format<sup>[1]</sup>. They
  * are instantiated with an api prefix (e.g., '/registry/v3', '/brokerage/v2', etc...), a default
- * type, a spec, and an optional tranform function[2]. It is intended that each service will
+ * type, a spec, and an optional tranform function<sup>[2]</sup>. It is intended that each service will
  * maintain a library of resource translators that can be used throughout the service.
  *
  * Example:
  *
+ * ```ts
  * export const User = new Translator(
  *   "/users/v1",
  *   "users",
@@ -73,44 +95,24 @@ import { SimpleLogLevels, SimpleLoggerInterface } from "@wymp/ts-simple-interfac
  * //   active: 1,
  * //   bestFriendId: "000011112222-3333-4444-5555-6666777788889999"
  * // }
+ * ```
  *
  * -------------------------
  *
  * ## Footnotes
  *
- * [1] Unfortunately, these functions cannot be purely type safe because API formats are not
+ * * [1] Unfortunately, these functions cannot be purely type safe because API formats are not
  *     necessarily directly related to DB formats (i.e., there is not a one-to-one relationship
  *     between key-value pairs in the DB format and key-value pairs in the API format). Thus, the
  *     best we can do is provide the _intended_ DB type and the _intended_ API type and then an
  *     additional function (`transform`, see below) that serves to transform attribute data between
  *     database and api formats. Because of this, it is imperitive that you double-check the output
  *     of your Translators using unit tests.
- * [2] The `transform` param allows you to transform values between api and db format. For example,
+ * * [2] The `transform` param allows you to transform values between api and db format. For example,
  *     you may store boolean values as TINYINT in the database, or uuid values as BINARY(16) in the
  *     database. You can use the `transform` function to perform these transformations in each
  *     direction.
  */
-
-/**
- * ResourceSpecs describe the attributes and relationships that a resource has and the way they map
- * between database representations and api representations.
- */
-declare type DbFieldName = string;
-declare type ApiFieldName = string;
-declare type DefaultType = string;
-export interface ApiResourceSpec {
-  [apiFieldName: string]: "attr" | [DbFieldName | null, DefaultType];
-}
-export interface DbResourceSpec {
-  [dbFieldName: string]: "attr" | [ApiFieldName, DefaultType];
-}
-
-export interface TransformFunction<DT, AT> {
-  <K extends keyof DT>(from: "db", fieldName: K, val: DT[K]): unknown | void;
-  <K extends keyof AT>(from: "api", fieldName: K, val: AT[K]): unknown | void;
-}
-
-declare type Nullable<T> = { [K in keyof T]: T[K] | null };
 
 export class Translator<
   DT extends { id: number | string | Buffer },
@@ -156,7 +158,7 @@ export class Translator<
     // We need to do this for each resource in an array, so make this block reusable
     const trans = (row: DT): AT => {
       // Prepare an initial result
-      const result: any = {};
+      let result: any = {};
 
       // For each field in the database row....
       for (const x in row) {
@@ -187,9 +189,10 @@ export class Translator<
             log("debug", `Relationship type for ${relname} is of type '${type}'`);
 
             // Set the relationship
-            result[relname] = {
+            const relVal = {
               data: { type, id: row[x] },
             };
+            result[relname] = this.transform ? this.transform("db", x, relVal) : relVal;
           }
         }
       }
@@ -211,6 +214,11 @@ export class Translator<
             };
           }
         }
+      }
+
+      // Now run transform on the whole result, if applicable
+      if (this.transform) {
+        result = this.transform("db", null, result);
       }
 
       // Return the result
@@ -251,7 +259,7 @@ export class Translator<
     const trans = (row: PAT): PDT => {
       // Prepare an initial result. This must be "any" because the keys of the database type do
       // not match up to the keys of the api type in a way that we can directly map in Typescript.
-      const result: any = {};
+      let result: any = {};
 
       // For each field in the api row....
       for (const x in row) {
@@ -271,9 +279,7 @@ export class Translator<
 
         // If it's id or type or it matches an attribute from our spec, just use the value
         if (x === "id" || x === "type" || this.apiSpec[x] === "attr") {
-          result[x] = this.transform
-            ? this.transform("api", x as keyof AT, row[x as keyof AT]!)
-            : row[x];
+          result[x] = this.transform ? this.transform("api", x, row[x as keyof PAT]) : row[x];
         } else {
           // Otherwise, it's a relationship
 
@@ -293,8 +299,14 @@ export class Translator<
           log("debug", `Relationship for ${x} will be inserted into db field '${dbFieldName}'`);
 
           // We know this is a relationship, so we have to assume it has a data.id path
-          result[dbFieldName] = (row[x] as any).data.id;
+          const val = (row[x] as any).data.id;
+          result[dbFieldName] = this.transform ? this.transform("api", x, val) : val;
         }
+      }
+
+      // Now run transform on the whole result, if applicable
+      if (this.transform) {
+        result = this.transform("api", null, result);
       }
 
       // Return the result

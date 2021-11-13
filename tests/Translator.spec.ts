@@ -1,5 +1,5 @@
 import { deepmerge } from "@wymp/weenie-framework";
-import { Translator } from "../src";
+import { Translator as T } from "../src";
 
 declare type DbUntypedPerson = {
   id: string;
@@ -35,14 +35,14 @@ declare type ApiTypedPerson = {
   otherFriends: { data: Array<{ id: string; type: People }>; links: any } | null;
 };
 
-const UntypedPerson = new Translator<DbUntypedPerson, ApiUntypedPerson>(`/test/v2`, `people`, {
+const UntypedPerson = new T.Translator<DbUntypedPerson, ApiUntypedPerson>(`/test/v2`, `people`, {
   name: "attr",
   age: "attr",
   bestFriend: ["bestFriendId", "people"],
   otherFriends: [null, "people"],
 });
 
-const TypedPerson = new Translator<DbTypedPerson, ApiTypedPerson>(`/test/v2`, `people`, {
+const TypedPerson = new T.Translator<DbTypedPerson, ApiTypedPerson>(`/test/v2`, `people`, {
   type: "attr",
   name: "attr",
   age: "attr",
@@ -141,5 +141,77 @@ describe(`Translator`, () => {
         },
       })
     );
+  });
+
+  test("should allow field-level transformations for attributes", () => {
+    const TestPerson = new T.Translator<DbUntypedPerson, ApiUntypedPerson & { age: string | null }>(
+      `/test/v2`,
+      `people`,
+      {
+        name: "attr",
+        age: "attr",
+        bestFriend: ["bestFriendId", "people"],
+        otherFriends: [null, "people"],
+      },
+      (from: "db" | "api", k: string | null, v: any) => {
+        if (k === "age") {
+          return v === null ? v : from === "db" ? String(v) : Number(v);
+        }
+        return v;
+      }
+    );
+
+    const testDbPerson = deepmerge<DbUntypedPerson>({}, untypedDbPerson);
+    const testApiPerson = deepmerge<ApiUntypedPerson & { age: string | null }>(
+      {},
+      untypedApiPerson,
+      { age: testDbPerson.age === null ? null : String(testDbPerson.age) }
+    );
+
+    expect(TestPerson.dbToApi(testDbPerson)).toMatchObject(
+      deepmerge<any>({}, testApiPerson, { otherFriends: null }, { otherFriends: { data: null } })
+    );
+    expect(TestPerson.apiToDb(testApiPerson)).toMatchObject(testDbPerson);
+  });
+
+  test.todo("should allow field-level transformations for relationships");
+
+  /**
+   * NOTE: It is possible for people to write transform functions that use `any` for a return
+   * value. That is the user's choice, and can absolutely result in unexpected shapes.
+   */
+  test("should allow result-level transformations", () => {
+    const TestPerson = new T.Translator<DbUntypedPerson, ApiUntypedPerson & { age: string | null }>(
+      `/test/v2`,
+      `people`,
+      {
+        name: "attr",
+        age: "attr",
+        bestFriend: ["bestFriendId", "people"],
+        otherFriends: [null, "people"],
+      },
+      (from, k, _v) => {
+        if (k === null) {
+          const v: any = _v;
+          return {
+            ...v,
+            age: v.age === null ? null : from === "db" ? String(v.age) : Number(v.age),
+          };
+        }
+        return _v;
+      }
+    );
+
+    const testDbPerson = deepmerge<DbUntypedPerson>({}, untypedDbPerson);
+    const testApiPerson = deepmerge<ApiUntypedPerson & { age: string | null }>(
+      {},
+      untypedApiPerson,
+      { age: testDbPerson.age === null ? null : String(testDbPerson.age) }
+    );
+
+    expect(TestPerson.dbToApi(testDbPerson)).toMatchObject(
+      deepmerge<any>({}, testApiPerson, { otherFriends: null }, { otherFriends: { data: null } })
+    );
+    expect(TestPerson.apiToDb(testApiPerson)).toMatchObject(testDbPerson);
   });
 });
