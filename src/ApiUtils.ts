@@ -6,12 +6,13 @@ import { Api, Auth } from "@wymp/types";
 import { logger } from "./Logger";
 import { NumberAuthzSpec, StringAuthzSpec, assertAuthdReq, authorize } from "./AuthdReq";
 
-export type SuccessResponse<Data> = {
+export type SuccessResponse<Data, Meta = any> = {
   type: "success";
   status: 100 | 200 | 201 | 204;
   headers?: { [k: string]: string };
   data: Data;
-  meta?: any;
+  included?: Array<any>;
+  meta?: Meta;
 };
 
 export type RedirectResponse = {
@@ -23,7 +24,7 @@ export type RedirectResponse = {
   };
 };
 
-export type Response<Data> = SuccessResponse<Data> | RedirectResponse;
+export type Response<Data, Meta = any> = SuccessResponse<Data, Meta> | RedirectResponse;
 
 export type GenericEndpointSpec = {
   [EndpointName: string]: {
