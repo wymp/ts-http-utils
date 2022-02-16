@@ -1,6 +1,6 @@
 {
   "name": "@wymp/http-utils",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "A small typescript package providing various utilities for HTTP environments",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -10,7 +10,7 @@
   "scripts": {
     "test": "jest",
     "docgen": "npx typedoc src/index.ts --sort visibility --sort static-first --sort alphabetical",
-    "prepublishOnly": "rm -Rf dist; npx tsc"
+    "prepublishOnly": "rm -Rf dist; npx tsc && npm run docgen"
   },
   "repository": {
     "type": "git",

@@ -37,7 +37,7 @@ export type ApiSpec<EndpointSpec extends GenericEndpointSpec = GenericEndpointSp
   [T in keyof EndpointSpec]: {
     method: keyof SimpleHttpRequestHandlerBasicInterface;
     endpoint: string;
-    // TODO: parseBody
+    parseBody?: (req: any, log: SimpleLoggerInterface) => any;
     validate: (
       url: unknown,
       query: unknown,
@@ -104,7 +104,7 @@ export type ApiSpec<EndpointSpec extends GenericEndpointSpec = GenericEndpointSp
 
 /**
  * Apply an API specification to a SimpleHttpRequestHandlerBasicInterface. This takes a standard
- * http server (express or similar) and registered endpoints against it using a standard algorithm.
+ * http server (express or similar) and registers endpoints against it using a standard algorithm.
  * That algorithm is outlined clearly in the code below.
  */
 export const applyApiSpec = <EndpointSpec extends GenericEndpointSpec = GenericEndpointSpec>(
@@ -138,7 +138,10 @@ export const applyApiSpec = <EndpointSpec extends GenericEndpointSpec = GenericE
         // 2. Get a request-tagged logger
         const log = logger(r.log, req, res);
 
-        // TODO: 3. Parse body if necessary
+        // 3. Parse body if necessary
+        if (endpointSpec.parseBody) {
+          req.body = endpointSpec.parseBody(req, log);
+        }
 
         // 4. Validate the request, returning standardized and types params
         if (endpointSpec.hooks?.preValidate) {
