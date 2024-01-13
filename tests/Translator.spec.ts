@@ -1,4 +1,4 @@
-import { deepmerge } from "@wymp/weenie-framework";
+import { deepmerge } from "@wymp/weenie-base";
 import { Translator as T } from "../src";
 
 declare type DbUntypedPerson = {
@@ -162,11 +162,9 @@ describe(`Translator`, () => {
     );
 
     const testDbPerson = deepmerge<DbUntypedPerson>({}, untypedDbPerson);
-    const testApiPerson = deepmerge<ApiUntypedPerson & { age: string | null }>(
-      {},
-      untypedApiPerson,
-      { age: testDbPerson.age === null ? null : String(testDbPerson.age) }
-    );
+    const testApiPerson = deepmerge<ApiUntypedPerson & { age: string | null }>({}, untypedApiPerson, {
+      age: testDbPerson.age === null ? null : String(testDbPerson.age),
+    });
 
     expect(TestPerson.dbToApi(testDbPerson)).toMatchObject(
       deepmerge<any>({}, testApiPerson, { otherFriends: null }, { otherFriends: { data: null } })
@@ -203,11 +201,9 @@ describe(`Translator`, () => {
     );
 
     const testDbPerson = deepmerge<DbUntypedPerson>({}, untypedDbPerson);
-    const testApiPerson = deepmerge<ApiUntypedPerson & { age: string | null }>(
-      {},
-      untypedApiPerson,
-      { age: testDbPerson.age === null ? null : String(testDbPerson.age) }
-    );
+    const testApiPerson = deepmerge<ApiUntypedPerson & { age: string | null }>({}, untypedApiPerson, {
+      age: testDbPerson.age === null ? null : String(testDbPerson.age),
+    });
 
     expect(TestPerson.dbToApi(testDbPerson)).toMatchObject(
       deepmerge<any>({}, testApiPerson, { otherFriends: null }, { otherFriends: { data: null } })

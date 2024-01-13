@@ -1,7 +1,10 @@
 # HTTP Utils
 
 This is a small typescript package providing various utilities for HTTP environments. These are
-built assuming Express as a HTTP request handler framework.
+built assuming Express as an HTTP request handler framework.
+
+**NOTE: You can better view documentation for this library by cloning it and running
+`pnpm i && pnpm docs:gen && pnpm docs:view`.**
 
 The utilities are:
 

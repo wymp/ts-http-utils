@@ -114,10 +114,7 @@ declare type Nullable<T> = { [K in keyof T]: T[K] | null };
  *     direction.
  */
 
-export class Translator<
-  DT extends { id: number | string | Buffer },
-  AT extends { id: number | string; type: string }
-> {
+export class Translator<DT extends { id: number | string | Buffer }, AT extends { id: number | string; type: string }> {
   protected dbSpec: DbResourceSpec;
   protected apiSpec: ApiResourceSpec;
 

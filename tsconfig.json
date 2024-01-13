@@ -5,6 +5,7 @@
     "esModuleInterop": false,
     "target": "es2017",
     "noFallthroughCasesInSwitch": true,
+    "useUnknownInCatchVariables": false,
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,

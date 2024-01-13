@@ -1,3 +1,14 @@
-#!/bin/sh
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
 
-npx pretty-quick --staged
+set -e
+
+if [ -z "$SKIP_LINTING" ]; then
+    pnpm typecheck
+    pnpm prettier
+    pnpm lint
+fi
+
+if [ -z "$SKIP_TESTS" ]; then
+    pnpm jest
+fi

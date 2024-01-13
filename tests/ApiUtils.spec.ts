@@ -164,8 +164,7 @@ describe("ApiUtils", () => {
           /** Good value * /
           validate: (u, q, b, log) => Promise.resolve({ userId: "abcde", body: { data: {} } }),
           /** Good value */
-          validate: (u, q, b, log) =>
-            Promise.resolve({ userId: "abcde", body: { data: { name: "Jimmy Chavo" } } }),
+          validate: (u, q, b, log) => Promise.resolve({ userId: "abcde", body: { data: { name: "Jimmy Chavo" } } }),
           /**/
           authorize: (p, auth, log) => {
             /** Error value * /

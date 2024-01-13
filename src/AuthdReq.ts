@@ -34,9 +34,7 @@ export const isAuthdReq = <T>(_req: T, _obs?: Array<Obstruction>): _req is Auth.
       if (typeof req.auth.a !== "boolean") {
         obs.push({
           code: "Missing or Bad 'Authenticated' Flag",
-          text:
-            `Auth 'a' param must be a boolean value indicating whether the client id was ` +
-            `authenticated.`,
+          text: `Auth 'a' param must be a boolean value indicating whether the client id was ` + `authenticated.`,
         });
       }
 
@@ -71,9 +69,7 @@ export function assertAuthdReq<T>(_req: T): asserts _req is Auth.AuthdReq<T> {
   if (!isAuthdReq(_req, obs)) {
     throw new E.Unauthorized(
       `Request 'auth' value does not exist or does not conform to the expected values in ` +
-        `@wymp/types:\n\n * ${obs
-          .map((o) => `${o.code}: ${o.text}`)
-          .join(`\n * `)}\n\nAuth value: ` +
+        `@wymp/types:\n\n * ${obs.map((o) => `${o.code}: ${o.text}`).join(`\n * `)}\n\nAuth value: ` +
         JSON.stringify((_req as any)?.auth),
       `BAD-AUTH-OBJECT`,
       obs
@@ -108,18 +104,8 @@ declare type ClientAuthorized = boolean;
 declare type ClientRole = string;
 declare type UserRole = string;
 declare type OAuthScope = string;
-export type NumberAuthzSpec = [
-  number | null,
-  ClientAuthorized | null,
-  number | null,
-  number | null
-];
-export type StringAuthzSpec = [
-  ClientRole | null,
-  ClientAuthorized | null,
-  UserRole | null,
-  OAuthScope | null
-];
+export type NumberAuthzSpec = [number | null, ClientAuthorized | null, number | null, number | null];
+export type StringAuthzSpec = [ClientRole | null, ClientAuthorized | null, UserRole | null, OAuthScope | null];
 
 const isNumberAuthzSpec = (spec: any): spec is NumberAuthzSpec => {
   return (
@@ -196,10 +182,7 @@ export function authorize<T>(
         continue;
       }
       // Auth scopes
-      if (
-        auth[3] !== null &&
-        (!req.auth.u || typeof req.auth.u.s !== "number" || !(req.auth.u.s & auth[3]))
-      ) {
+      if (auth[3] !== null && (!req.auth.u || typeof req.auth.u.s !== "number" || !(req.auth.u.s & auth[3]))) {
         continue;
       }
 
@@ -232,10 +215,7 @@ export function authorize<T>(
         continue;
       }
       // Auth scopes
-      if (
-        auth[3] !== null &&
-        (!req.auth.u || !Array.isArray(req.auth.u.s) || !req.auth.u.s.includes(auth[3]))
-      ) {
+      if (auth[3] !== null && (!req.auth.u || !Array.isArray(req.auth.u.s) || !req.auth.u.s.includes(auth[3]))) {
         continue;
       }
 
@@ -257,8 +237,7 @@ export function authorize<T>(
   e.obstructions.push({
     code: `Does not match authorization criteria`,
     text:
-      `The user, API key or OAuth token you passed does not meet the authorization ` +
-      `requirements for this request.`,
+      `The user, API key or OAuth token you passed does not meet the authorization ` + `requirements for this request.`,
     params: {
       authSpecs,
       userInfo: {

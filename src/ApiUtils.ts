@@ -49,11 +49,7 @@ export type ApiSpec<EndpointSpec extends GenericEndpointSpec = GenericEndpointSp
     authorize:
       | Array<NumberAuthzSpec>
       | Array<StringAuthzSpec>
-      | ((
-          params: EndpointSpec[T]["params"],
-          auth: Auth.ReqInfo,
-          log: SimpleLoggerInterface
-        ) => Promise<void>);
+      | ((params: EndpointSpec[T]["params"], auth: Auth.ReqInfo, log: SimpleLoggerInterface) => Promise<void>);
     handle: (
       params: EndpointSpec[T]["params"],
       auth: Auth.ReqInfo,
@@ -125,9 +121,7 @@ export const applyApiSpec = <EndpointSpec extends GenericEndpointSpec = GenericE
     // Get the current endpoint spec into a variable
     const endpointSpec = apiSpec[name];
     r.log.notice(
-      `HTTP: Registering ${endpointSpec.method
-        .toUpperCase()
-        .padEnd(7)} ${endpointSpec.endpoint.toString()}`
+      `HTTP: Registering ${endpointSpec.method.toUpperCase().padEnd(7)} ${endpointSpec.endpoint.toString()}`
     );
 
     // Register global body parsers, if specified
@@ -219,10 +213,7 @@ export const applyApiSpec = <EndpointSpec extends GenericEndpointSpec = GenericE
                 t: "collection",
                 data: response.data,
                 // TODO: ...(included.length > 0 ? { included } : {}),
-                meta: Object.assign(
-                  { pg: { size: 25, nextCursor: null, prevCursor: null } },
-                  response.meta || {}
-                ),
+                meta: Object.assign({ pg: { size: 25, nextCursor: null, prevCursor: null } }, response.meta || {}),
               };
             } else if (response.data === null) {
               responseObject = {
