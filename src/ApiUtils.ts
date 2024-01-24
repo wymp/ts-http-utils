@@ -1,3 +1,23 @@
+/**
+ * This module is a collection of types and utilities representing a highly experimental API definition system. This can
+ * potentially be very powerful, as the goal of it is to allow you to define your entire API - from endpoints to
+ * authorization to validation to response - in a single place. This is a work in progress, and is probably not ready
+ * for production yet, but feel free to play around with it and see what you think. (It should be safe-enough - I'm just
+ * not sure the opinions expressed in this module are optimal yet.)
+ *
+ * IMPORTANT: It makes the following assumptions:
+ *
+ * 1. You've used _some_ system to authenticate the request and attach `Auth.ReqInfo` to the request object. You can
+ *    stub this out in development, but you'd typically do this by attaching a bearer token to the request with this
+ *    information encoded in it and then authenticating and decoding the token. (See
+ *    https://github.com/wymp/ts-auth-gateway and https://github.com/wymp/ts-auth-gateway-header-decoder)
+ * 2. You're happy with my standardized API response formats and pagination ideas (see
+ *    https://wymp.github.io/ts-types/modules/Api.html)
+ *
+ * See {@link ApiSpec} for more information.
+ *
+ * @module ApiUtils
+ */
 import {
   SimpleLoggerInterface,
   SimpleHttpRequestHandlerInterface,
@@ -5,7 +25,7 @@ import {
 } from "@wymp/ts-simple-interfaces";
 import { Api, Auth } from "@wymp/types";
 import { logger } from "./Logger";
-import { NumberAuthzSpec, StringAuthzSpec, assertAuthdReq, authorize } from "./AuthdReq";
+import { NumberAuthzSpec, StringAuthzSpec, assertAuthdReq, authorize } from "./AuthUtils";
 
 export type SuccessResponse<Data, Meta = any> = {
   type: "success";
@@ -34,67 +54,98 @@ export type GenericEndpointSpec = {
   };
 };
 
+/**
+ * This type defines an API specification. It's a map of endpoint names to endpoint specifications. While the names
+ * are arbitrary, it's generally easiest to use something like "GET /users/:id" as the name, as that makes it very
+ * obvious what endpoint we're dealing with and also very easy to find an endpoint within a given spec.
+ *
+ * Important things to know about an API spec:
+ *
+ * * You must provide a method, endpoint, and validate, authorize, and handle functions for each endpoint. The rest are
+ *   optional. If you don't feel the need to validate inputs or authorize requests, you can just provide pass-through
+ *   functions.
+ * * The `validate` function is intended to take in the request's URL params, query params, and body, along with the
+ *   request's auth information and return a specifically-typed "params" object which may be anything you'd like. This
+ *   is to address annoyance of your handlers having to figure out where to get the params they need to do their work.
+ *   Your handler, then, simply works with the params output from this function and can forget about the details of
+ *   where those params come from.
+ * * The `authorize` function can technically be any logic, but is pre-configured to work with the `authorize` function
+ *   exported from this library. See the main readme for more information.
+ * * The `handle` function is your primary handler and will often be a thin wrapper over a library function representing
+ *   a piece of your business logic. It may do some minor transformations of input params (or not) and will then return
+ *   a standardized response object that this system recognizes.
+ * * Finally, if you need additional functionality for any reason (for example, to insert headers into the response or
+ *   further manipulate input params or something), you can pass a variety of hooks.
+ *
+ * @typeParam EndpointSpec - A type defining the inputs (`params`) and outputs (`response`) of each endpoint. Note that
+ * `response` is intended to be the type of the _data_ returned by this endpoint. This API system will wrap that data
+ * in a more fully-featured response object (see {@link https://wymp.github.io/ts-types/modules/Api.html | Api.Response}
+ * for more on that).
+ */
 export type ApiSpec<EndpointSpec extends GenericEndpointSpec = GenericEndpointSpec> = {
-  [T in keyof EndpointSpec]: {
+  [K in keyof EndpointSpec]: {
     method: keyof SimpleHttpRequestHandlerBasicInterface;
     endpoint: string;
     bodyParsers?: Array<(req: any, res: any, next: (e?: Error) => void) => any>;
     validate: (
-      url: unknown,
+      /** These are the `req.params` (i.e., url params, such as `:id` in `/users/:id`), not the final params */
+      urlParams: unknown,
+      /** req.query */
       query: unknown,
+      /** req.body */
       body: unknown,
       auth: Auth.ReqInfo,
       log: SimpleLoggerInterface
-    ) => Promise<EndpointSpec[T]["params"]>;
+    ) => Promise<EndpointSpec[K]["params"]>;
     authorize:
       | Array<NumberAuthzSpec>
       | Array<StringAuthzSpec>
-      | ((params: EndpointSpec[T]["params"], auth: Auth.ReqInfo, log: SimpleLoggerInterface) => Promise<void>);
+      | ((params: EndpointSpec[K]["params"], auth: Auth.ReqInfo, log: SimpleLoggerInterface) => Promise<void>);
     handle: (
-      params: EndpointSpec[T]["params"],
+      params: EndpointSpec[K]["params"],
       auth: Auth.ReqInfo,
       log: SimpleLoggerInterface
-    ) => Promise<Response<EndpointSpec[T]["response"]>>;
+    ) => Promise<Response<EndpointSpec[K]["response"]>>;
     hooks?: {
       preValidate?: (req: any, res: any, log: SimpleLoggerInterface) => Promise<void>;
       postValidate?: (
-        params: EndpointSpec[T]["params"],
+        params: EndpointSpec[K]["params"],
         req: any,
         res: any,
         log: SimpleLoggerInterface
-      ) => Promise<EndpointSpec[T]["params"]>;
+      ) => Promise<EndpointSpec[K]["params"]>;
       preAuthorize?: (
-        params: EndpointSpec[T]["params"],
+        params: EndpointSpec[K]["params"],
         req: any,
         res: any,
         log: SimpleLoggerInterface
-      ) => Promise<EndpointSpec[T]["params"]>;
+      ) => Promise<EndpointSpec[K]["params"]>;
       postAuthorize?: (
-        params: EndpointSpec[T]["params"],
+        params: EndpointSpec[K]["params"],
         req: any,
         res: any,
         log: SimpleLoggerInterface
-      ) => Promise<EndpointSpec[T]["params"]>;
+      ) => Promise<EndpointSpec[K]["params"]>;
       preHandle?: (
-        params: EndpointSpec[T]["params"],
+        params: EndpointSpec[K]["params"],
         req: any,
         res: any,
         log: SimpleLoggerInterface
-      ) => Promise<EndpointSpec[T]["params"]>;
+      ) => Promise<EndpointSpec[K]["params"]>;
       postHandle?: (
-        response: Response<EndpointSpec[T]["response"]>,
-        params: EndpointSpec[T]["params"],
+        response: Response<EndpointSpec[K]["response"]>,
+        params: EndpointSpec[K]["params"],
         req: any,
         res: any,
         log: SimpleLoggerInterface
-      ) => Promise<Response<EndpointSpec[T]["response"]>>;
+      ) => Promise<Response<EndpointSpec[K]["response"]>>;
       preReturn?: (
-        response: Response<EndpointSpec[T]["response"]>,
-        params: EndpointSpec[T]["params"],
+        response: Response<EndpointSpec[K]["response"]>,
+        params: EndpointSpec[K]["params"],
         req: any,
         res: any,
         log: SimpleLoggerInterface
-      ) => Promise<Response<EndpointSpec[T]["response"]>>;
+      ) => Promise<Response<EndpointSpec[K]["response"]>>;
     };
   };
 };
@@ -102,7 +153,11 @@ export type ApiSpec<EndpointSpec extends GenericEndpointSpec = GenericEndpointSp
 /**
  * Apply an API specification to a SimpleHttpRequestHandlerBasicInterface. This takes a standard
  * http server (express or similar) and registers endpoints against it using a standard algorithm.
- * That algorithm is outlined clearly in the code below.
+ * That algorithm is outlined clearly in the code.
+ *
+ * See [code](https://github.com/wymp/ts-http-utils/blob/current/src/ApiUtils.ts) for more details,
+ * and see {@link ApiSpec} for more detailed information about the input to this function. Finally,
+ * see the [main readme](../#md:api-spec-example) for a detailed example.
  */
 export const applyApiSpec = <EndpointSpec extends GenericEndpointSpec = GenericEndpointSpec>(
   apiSpec: ApiSpec<EndpointSpec>,
@@ -116,6 +171,12 @@ export const applyApiSpec = <EndpointSpec extends GenericEndpointSpec = GenericE
   // Breaking this out into a more narrowly scoped variable is necessary for typescript
   const basicHttp: SimpleHttpRequestHandlerBasicInterface = r.http;
 
+  // Register global body parsers, if specified
+  if (globalBodyParsers) {
+    r.log.notice(`Registering ${globalBodyParsers.length} global body parser(s)`);
+    globalBodyParsers.forEach((parser) => r.http.use(parser));
+  }
+
   // For each endpoint spec....
   for (const name in apiSpec) {
     // Get the current endpoint spec into a variable
@@ -124,18 +185,12 @@ export const applyApiSpec = <EndpointSpec extends GenericEndpointSpec = GenericE
       `HTTP: Registering ${endpointSpec.method.toUpperCase().padEnd(7)} ${endpointSpec.endpoint.toString()}`
     );
 
-    // Register global body parsers, if specified
-    if (globalBodyParsers) {
-      r.log.notice(`Registering ${globalBodyParsers.length} global body parser(s)`);
-      globalBodyParsers.forEach((parser) => r.http.use(parser));
-    }
-
     // Register the endpoint against the HTTP server object
     basicHttp[endpointSpec.method](endpointSpec.endpoint, [
       // If we've specified body parser, insert them as a middleware before the handler
       ...(endpointSpec.bodyParsers ? endpointSpec.bodyParsers : []),
 
-      // Then run the handler
+      // Then insert the handler
       async (req, res, next) => {
         try {
           // 0. If we're stubbing out auth, do that
@@ -149,7 +204,7 @@ export const applyApiSpec = <EndpointSpec extends GenericEndpointSpec = GenericE
           // 2. Get a request-tagged logger
           const log = logger(r.log, req, res);
 
-          // 3. Validate the request, returning standardized and types params
+          // 3. Validate the request, returning standardized and typed params
           if (endpointSpec.hooks?.preValidate) {
             await endpointSpec.hooks.preValidate(req, res, log);
           }

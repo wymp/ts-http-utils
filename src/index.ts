@@ -1,5 +1,10 @@
 export * from "./Logger";
-export * from "./AuthdReq";
-export * from "./ApiUtils";
+
+import * as AuthUtils from "./AuthUtils";
+export { AuthUtils };
+
+import * as ApiUtils from "./ApiUtils";
+export { ApiUtils };
+
 import * as Translator from "./Translator";
 export { Translator };

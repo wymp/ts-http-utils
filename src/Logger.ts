@@ -1,5 +1,25 @@
 import { SimpleLoggerInterface, TaggedLogger } from "@wymp/ts-simple-interfaces";
 
+/**
+ * Call this function at the top of your request handlers and/or middleware to obtain a logger tagged with information
+ * from the current request. For a given request, you'll always get the same logger back.
+ *
+ * @example
+ *
+ * ```ts
+ * export const myRequestHandler = (deps: { log: SimpleLoggerInterface }) =>
+ *   (req: Request, res: Response, next: NextFunction) => {
+ *     try {
+ *       const log = logger(deps.log, req, res);
+ *       log.info("Starting request `myRequestHandler`");
+ *       // ...
+ *       res.send("OK");
+ *     } catch (e) {
+ *       next(e);
+ *     }
+ *   }
+ * ```
+ */
 export const logger = (
   log: SimpleLoggerInterface,
   req: {

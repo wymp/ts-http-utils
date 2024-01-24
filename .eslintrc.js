@@ -41,5 +41,8 @@ module.exports = {
         // is for a library like this. (HTTP requests are one of the few cases where it's customary to probe values to
         // find out what's available, and using `unknown` makes that really hard.)
         "@typescript-eslint/no-explicit-any": "off",
+
+        // We like namespaces
+        "@typescript-eslint/no-namespace": "off",
     }
 }

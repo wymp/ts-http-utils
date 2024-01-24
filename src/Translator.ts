@@ -27,7 +27,7 @@ declare type Nullable<T> = { [K in keyof T]: T[K] | null };
  * type, a spec, and an optional tranform function<sup>[2]</sup>. It is intended that each service will
  * maintain a library of resource translators that can be used throughout the service.
  *
- * Example:
+ * @example
  *
  * ```ts
  * export const User = new Translator(

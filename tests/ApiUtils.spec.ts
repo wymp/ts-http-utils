@@ -1,4 +1,4 @@
-import { ApiSpec, getCollectionParams } from "../src";
+import { ApiUtils } from "../src";
 
 /**
  * To test this module, we must define and create a small API. Since this module is basically
@@ -43,7 +43,7 @@ declare type EndpointSpecs = {
 describe("ApiUtils", () => {
   describe("API Definitions", () => {
     test("API definition compiles correctly", () => {
-      const Api: ApiSpec<EndpointSpecs> = {
+      const Api: ApiUtils.ApiSpec<EndpointSpecs> = {
         "GET /users": {
           method: "get" as const,
           endpoint: "/users",
@@ -234,11 +234,11 @@ describe("ApiUtils", () => {
 
   describe("getCollectionParams", () => {
     test("returns empty object if nothing passed in and no defaults", () => {
-      expect(Object.keys(getCollectionParams({}))).toHaveLength(0);
+      expect(Object.keys(ApiUtils.getCollectionParams({}))).toHaveLength(0);
     });
 
     test("returns defaults if nothing passed in", () => {
-      expect(getCollectionParams({}, { __pg: { size: 25 }, __sort: "id" })).toMatchObject({
+      expect(ApiUtils.getCollectionParams({}, { __pg: { size: 25 }, __sort: "id" })).toMatchObject({
         __pg: { size: 25 },
         __sort: "id",
       });
@@ -246,7 +246,7 @@ describe("ApiUtils", () => {
 
     test("overrides defaults if params passed in", () => {
       expect(
-        getCollectionParams(
+        ApiUtils.getCollectionParams(
           {
             pg: {
               size: 100,
